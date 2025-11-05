@@ -6,9 +6,22 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// ✅ Aktifkan CORS agar frontend (localhost atau domain lain) bisa akses
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json());
 
+// ✅ Route tes biar gak 404 saat diakses langsung
+app.get("/", (req, res) => {
+  res.send("✅ Server AI Chatbot aktif di Railway!");
+});
+
+// ✅ Endpoint utama untuk chatbot
 app.post("/chat", async (req, res) => {
   try {
     const response = await fetch("https://api.aistudio.com/v1/chat/completions", {
@@ -24,11 +37,19 @@ app.post("/chat", async (req, res) => {
     });
 
     const data = await response.json();
+
+    if (!data || !data.choices || !data.choices[0].message) {
+      console.error("❌ Response dari AI Studio tidak valid:", data);
+      return res.status(500).json({ error: "Respons AI tidak valid" });
+    }
+
     res.json({ reply: data.choices[0].message.content });
   } catch (error) {
-    console.error("❌ Error:", error);
+    console.error("❌ Error saat memanggil AI Studio:", error);
     res.status(500).json({ error: "Gagal menghubungi AI Studio" });
   }
 });
 
-app.listen(5000, () => console.log("🚀 Server berjalan di http://localhost:5000"));
+// ✅ Gunakan PORT dari Railway atau default ke 5000 (untuk lokal)
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server berjalan di port ${PORT}`));
