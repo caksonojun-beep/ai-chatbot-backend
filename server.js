@@ -7,7 +7,7 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Izinkan semua origin (sementara, untuk pengujian)
+// ✅ Izinkan semua origin sementara (buat test)
 app.use(cors({
   origin: "*",
   methods: ["GET", "POST"],
@@ -15,6 +15,10 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("✅ Server aktif dan siap menerima permintaan!");
+});
 
 app.post("/chat", async (req, res) => {
   try {
@@ -31,13 +35,13 @@ app.post("/chat", async (req, res) => {
     });
 
     const data = await response.json();
-    res.json({ reply: data.choices[0].message.content });
+    res.json({ reply: data.choices?.[0]?.message?.content || "⚠️ Tidak ada respons dari AI." });
   } catch (error) {
     console.error("❌ Error:", error);
     res.status(500).json({ error: "Gagal menghubungi AI Studio" });
   }
 });
 
-// ✅ Gunakan PORT dari Railway
+// ✅ Gunakan port dari Railway
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, "0.0.0.0", () => console.log(`🚀 Server berjalan di port ${PORT}`));
